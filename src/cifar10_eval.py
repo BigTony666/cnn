@@ -49,11 +49,11 @@ tf.app.flags.DEFINE_string('eval_data', 'test',
                            """Either 'test' or 'train_eval'.""")
 tf.app.flags.DEFINE_string('checkpoint_dir', os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 'logs/cifar_train'),
                            """Directory where to read model checkpoints.""")
-tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
+tf.app.flags.DEFINE_integer('eval_interval_secs', 1,
                             """How often to run the eval.""")
 tf.app.flags.DEFINE_integer('num_examples', 10000,
                             """Number of examples to run.""")
-tf.app.flags.DEFINE_boolean('run_once', True,
+tf.app.flags.DEFINE_boolean('run_once', False,
                          """Whether to run eval only once.""")
 
 

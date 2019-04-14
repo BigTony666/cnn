@@ -17,7 +17,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 'logs/cifar_train'),
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 10 + 1,
+tf.app.flags.DEFINE_integer('max_steps', 1000 + 1,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
