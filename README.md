@@ -23,3 +23,16 @@ https://stackoverflow.com/questions/37660312/how-to-run-tensorflow-on-cpu
 https://stackoverflow.com/questions/41233635/meaning-of-inter-op-parallelism-threads-and-intra-op-parallelism-threads/41233901#41233901
 
 Profile Module Usage: https://zhuanlan.zhihu.com/p/40156908
+
+## How to run
+
+```bash
+# Run tensorboard
+$ tensorboard --logdir ~/workplace/cnn/logs/cifar10_eval
+
+# Run train
+$  python src/cifar10_train.py
+
+# Run eval
+$ python src/cifar10_eval.py
+```

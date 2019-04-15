@@ -1,0 +1,6 @@
+model_checkpoint_path: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1665"
+all_model_checkpoint_paths: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1568"
+all_model_checkpoint_paths: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1597"
+all_model_checkpoint_paths: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1615"
+all_model_checkpoint_paths: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1642"
+all_model_checkpoint_paths: "/Users/bigtony/workplace/cnn/logs/cifar_train/model.ckpt-1665"
