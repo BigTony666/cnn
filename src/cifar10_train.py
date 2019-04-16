@@ -151,7 +151,7 @@ def train():
       # 5. Profile python code performance line by line
       profile_code_opt_builder = option_builder.ProfileOptionBuilder()
       profile_code_opt_builder.with_max_depth(1000)
-      profile_code_opt_builder.with_node_names(show_name_regexes=['cifar10*.py.*'])
+      profile_code_opt_builder.with_node_names(show_name_regexes=[r'cifar10[\s\S]*'])
       profile_code_opt_builder.with_min_execution_time(min_micros=10) # Only show Top 10
       profile_code_opt_builder.select(['micros'])
       profile_code_opt_builder.order_by('micros')
