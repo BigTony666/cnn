@@ -17,7 +17,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 'logs/cifar_train'),
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 10000 + 1,
+tf.app.flags.DEFINE_integer('max_steps', 100 + 1,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -90,44 +90,75 @@ def train():
             , allow_soft_placement=True
             # , device_count = {'GPU': 0}
             )) as mon_sess:
-      # KJ: Create profiler
+      
+      # Create tfProfiler instance
       cifar_profiler = model_analyzer.Profiler(graph=mon_sess.graph)
-      run_options = tf.RunOptions(trace_level = tf.RunOptions.FULL_TRACE)
+      run_options = tf.RunOptions(trace_level = tf.RunOptions.FULL_TRACE) # Set level to Full Trace
       run_metadata = tf.RunMetadata()
       
       while not mon_sess.should_stop():
           if i % FLAGS.log_frequency == 0:
               mon_sess.run(train_op, options=run_options, run_metadata=run_metadata)
-              cifar_profiler.add_step(i, run_metadata)
+              cifar_profiler.add_step(step=i, run_meta=run_metadata)
             
           else:
-              mon_sess.run(train_op)            # cifar_profiler.profile_name_scope(
+              mon_sess.run(train_op)            
           i+=1
-      cifar_profiler.advise(options=model_analyzer.ALL_ADVICE)            #     options=(option_builder.ProfileOptionBuilder.trainable_variables_parameter()))
+      
+      """
+      Profiler Section
+        1. Profile each graph node's execution time and consumed memory
+        2. Profile each layer's parameters, modle size and parameters distribution
+        3. Profile top K most time-consuming operations
+        4. Profile top K most memory-consuming operations
+        5. Profile python code performance line by line
+        6. Give optimization Advice
+      """
+
+      # 1. Profile each graph node's execution time and consumed memory
       profile_graph_opts_builder = option_builder.ProfileOptionBuilder(
-      option_builder.ProfileOptionBuilder.time_and_memory())
+        option_builder.ProfileOptionBuilder.time_and_memory()
+      )
+      profile_graph_opts_builder.with_timeline_output(
+        timeline_file=os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 'logs/cifar10_profiler/cifar10_profiler.json')
+      )
+      profile_graph_opts_builder.with_step((FLAGS.max_steps-1)//2) # Profile <num>th step
+      cifar_profiler.profile_graph(profile_graph_opts_builder.build()) # Show graph view result
     
-      profile_graph_opts_builder.with_timeline_output(timeline_file='/content/drive/My Drive/hpc-project/cifar10_profiler.json')
-    
-      # Last step
-      profile_graph_opts_builder.with_step(20)
-
-      #显示视图为graph view
-      cifar_profiler.profile_graph(profile_graph_opts_builder.build())
-    
-      #统计内容为所有trainable Variable Op
-      profile_scope_opt_builder = option_builder.ProfileOptionBuilder(option_builder.ProfileOptionBuilder.trainable_variables_parameter())
-
-      #显示的嵌套深度为4
-      profile_scope_opt_builder.with_max_depth(4)
-      #显示字段是params，即参数
-      profile_scope_opt_builder.select(['params'])
-      #根据params数量进行显示结果排序
-      profile_scope_opt_builder.order_by('params')
-    
-      #显示视图为scope view
+      # 2. Profile each layer's parameters, modle size and parameters distribution
+      profile_scope_opt_builder = option_builder.ProfileOptionBuilder(
+        option_builder.ProfileOptionBuilder.trainable_variables_parameter()
+      )
+      profile_scope_opt_builder.with_max_depth(4) # Maximum level of nested depth
+      profile_scope_opt_builder.select(['params']) # Show params
+      profile_scope_opt_builder.order_by('params') # Sort by params
       cifar_profiler.profile_name_scope(profile_scope_opt_builder.build())
 
+      # 3. Profile top K most time-consuming operations
+      profile_op_opt_builder = option_builder.ProfileOptionBuilder()
+      profile_op_opt_builder.select(['micros','occurrence']) # Show Op execution time, node's number
+      profile_op_opt_builder.order_by('micros') # Sort by micros
+      profile_op_opt_builder.with_max_depth(4) # Only show top 5
+      cifar_profiler.profile_operations(profile_op_opt_builder.build())
+
+      # 4. Profile top K most memory-consuming operations
+      profile_op_opt_builder = option_builder.ProfileOptionBuilder()
+      profile_op_opt_builder.select(['bytes','occurrence']) # Show Op consumed memory, node's number
+      profile_op_opt_builder.order_by('bytes') # Sort by bytes
+      profile_op_opt_builder.with_max_depth(4) # Only show top 5
+      cifar_profiler.profile_operations(profile_op_opt_builder.build())
+
+      # 5. Profile python code performance line by line
+      profile_code_opt_builder = option_builder.ProfileOptionBuilder()
+      profile_code_opt_builder.with_max_depth(1000)
+      profile_code_opt_builder.with_node_names(show_name_regexes=['cifar10*.py.*'])
+      profile_code_opt_builder.with_min_execution_time(min_micros=10) # Only show Top 10
+      profile_code_opt_builder.select(['micros'])
+      profile_code_opt_builder.order_by('micros')
+      cifar_profiler.profile_python(profile_code_opt_builder.build())
+
+      # 6. Give optimization Advice
+      cifar_profiler.advise(options=model_analyzer.ALL_ADVICE)
 
 
 def main(argv=None):  # pylint: disable=unused-argument
